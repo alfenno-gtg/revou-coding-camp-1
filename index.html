@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pet the Cat 🐱</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            quicksand: ['Quicksand', 'sans-serif'],
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+            squish: {
+              '0%':   { transform: 'scale(1)' },
+              '30%':  { transform: 'scaleX(1.2) scaleY(0.85)' },
+              '60%':  { transform: 'scaleX(0.9) scaleY(1.1)' },
+              '100%': { transform: 'scale(1)' },
+            },
+            popIn: {
+              '0%':   { opacity: '0', transform: 'scale(0.5) translateY(0px)' },
+              '60%':  { opacity: '1', transform: 'scale(1.15) translateY(-20px)' },
+              '100%': { opacity: '0', transform: 'scale(1) translateY(-50px)' },
+            },
+            heartBeat: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '25%': { transform: 'scale(1.3)' },
+              '50%': { transform: 'scale(1)' },
+              '75%': { transform: 'scale(1.2)' },
+            },
+            wiggle: {
+              '0%, 100%': { transform: 'rotate(-8deg)' },
+              '50%': { transform: 'rotate(8deg)' },
+            },
+            tailWag: {
+              '0%, 100%': { transform: 'rotate(-20deg)' },
+              '50%': { transform: 'rotate(20deg)' },
+            },
+            eyeClose: {
+              '0%, 100%': { transform: 'scaleY(1)' },
+              '40%, 60%': { transform: 'scaleY(0.08)' },
+            },
+            blush: {
+              '0%': { opacity: '0' },
+              '50%': { opacity: '1' },
+              '100%': { opacity: '0' },
+            },
+            starSpin: {
+              '0%': { transform: 'rotate(0deg) scale(0.5)', opacity: '0' },
+              '50%': { transform: 'rotate(180deg) scale(1.2)', opacity: '1' },
+              '100%': { transform: 'rotate(360deg) scale(0)', opacity: '0' },
+            },
+            counterBump: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.2)' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+          },
+          animation: {
+            float: 'float 3s ease-in-out infinite',
+            squish: 'squish 0.4s ease-in-out',
+            popIn: 'popIn 0.8s ease-out forwards',
+            heartBeat: 'heartBeat 0.6s ease-in-out',
+            wiggle: 'wiggle 0.3s ease-in-out infinite',
+            tailWag: 'tailWag 0.25s ease-in-out infinite',
+            eyeClose: 'eyeClose 0.5s ease-in-out',
+            blush: 'blush 1s ease-in-out forwards',
+            starSpin: 'starSpin 0.8s ease-out forwards',
+            counterBump: 'counterBump 0.3s ease-in-out',
+            slideUp: 'slideUp 0.6s ease-out both',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #FFDEE9 0%, #c9f0ff 50%, #B5FFFC 100%);
+      background-size: 400% 400%;
+      animation: bgShift 8s ease infinite;
+      min-height: 100vh;
+    }
+
+    @keyframes bgShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Prevent text selection on the cat */
+    #cat-container { user-select: none; -webkit-user-select: none; }
+
+    /* Cat SVG parts */
+    .cat-eye { transition: transform 0.1s; transform-origin: center; }
+    .cat-blush { opacity: 0; }
+    .cat-tail { transform-origin: 20% 90%; }
+
+    /* Reaction emoji float */
+    .reaction-popup {
+      position: absolute;
+      pointer-events: none;
+      font-size: 2rem;
+      animation: popIn 0.8s ease-out forwards;
+      z-index: 50;
+    }
+
+    /* Particle stars */
+    .star-particle {
+      position: absolute;
+      pointer-events: none;
+      font-size: 1.2rem;
+      animation: starSpin 0.8s ease-out forwards;
+      z-index: 50;
+    }
+
+    /* Glass card */
+    .glass {
+      background: rgba(255, 255, 255, 0.30);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    /* Cute paw cursor */
+    #cat-hit-area {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='20' r='7' fill='%23ffb3c6'/%3E%3Ccircle cx='10' cy='13' r='4' fill='%23ffb3c6'/%3E%3Ccircle cx='22' cy='13' r='4' fill='%23ffb3c6'/%3E%3Ccircle cx='6' cy='17' r='3' fill='%23ffb3c6'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23ffb3c6'/%3E%3C/svg%3E") 16 24, pointer;
+    }
+
+    /* Milestone ring pulse */
+    @keyframes ringPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(255, 100, 180, 0.5); }
+      70%  { box-shadow: 0 0 0 18px rgba(255, 100, 180, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 100, 180, 0); }
+    }
+    .ring-pulse { animation: ringPulse 0.6s ease-out; }
+
+    /* Title glow */
+    .title-glow {
+      text-shadow: 0 0 20px rgba(255, 100, 180, 0.4), 0 0 40px rgba(181, 255, 252, 0.3);
+    }
+
+    /* Combo badge */
+    #combo-badge {
+      transition: opacity 0.3s, transform 0.3s;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden relative">
+
+  <!-- Floating background blobs -->
+  <div class="pointer-events-none fixed inset-0 overflow-hidden -z-10">
+    <div class="absolute w-72 h-72 rounded-full bg-pink-200/40 blur-3xl top-[-5%] left-[-5%] animate-[float_6s_ease-in-out_infinite]"></div>
+    <div class="absolute w-64 h-64 rounded-full bg-cyan-200/40 blur-3xl bottom-[-5%] right-[-5%] animate-[float_7s_ease-in-out_infinite_1s]"></div>
+    <div class="absolute w-48 h-48 rounded-full bg-purple-200/30 blur-3xl top-[40%] right-[5%] animate-[float_5s_ease-in-out_infinite_0.5s]"></div>
+    <div class="absolute w-40 h-40 rounded-full bg-yellow-200/30 blur-3xl bottom-[20%] left-[5%] animate-[float_8s_ease-in-out_infinite_2s]"></div>
+  </div>
+
+  <!-- Main card -->
+  <div class="glass rounded-3xl p-8 flex flex-col items-center gap-6 w-full max-w-sm shadow-2xl animate-slideUp">
+
+    <!-- Title -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-pink-500 title-glow tracking-wide">Pet the Kitty!</h1>
+      <p class="text-sm text-pink-400/80 font-medium mt-1">Give the cat some love ♡</p>
+    </div>
+
+    <!-- Stats row -->
+    <div class="flex gap-3 w-full justify-center">
+
+      <!-- Pet counter -->
+      <div class="glass rounded-full px-5 py-2 flex items-center gap-2 shadow-md" id="counter-badge">
+        <span class="text-lg">🐾</span>
+        <div class="flex flex-col leading-tight">
+          <span class="text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Pets</span>
+          <span class="text-xl font-bold text-pink-500" id="pet-count">0</span>
+        </div>
+      </div>
+
+      <!-- Happiness meter -->
+      <div class="glass rounded-full px-5 py-2 flex items-center gap-2 shadow-md">
+        <span class="text-lg">💖</span>
+        <div class="flex flex-col leading-tight">
+          <span class="text-[10px] font-semibold text-purple-400 uppercase tracking-widest">Happy</span>
+          <span class="text-xl font-bold text-purple-500" id="happiness">0%</span>
+        </div>
+      </div>
+
+      <!-- Combo counter -->
+      <div class="glass rounded-full px-5 py-2 flex items-center gap-2 shadow-md" id="combo-badge" style="opacity:0;transform:scale(0.8)">
+        <span class="text-lg">⚡</span>
+        <div class="flex flex-col leading-tight">
+          <span class="text-[10px] font-semibold text-amber-400 uppercase tracking-widest">Combo</span>
+          <span class="text-xl font-bold text-amber-500" id="combo-count">x1</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cat stage (relative container for popups) -->
+    <div class="relative w-full flex justify-center items-center" id="cat-stage">
+
+      <!-- Cat SVG container -->
+      <div id="cat-container" class="relative w-48 h-48 aspect-square animate-float cursor-pointer">
+        <div id="cat-hit-area" class="absolute inset-0 z-10 rounded-full"></div>
+
+        <!-- The Cat SVG (minimalist vector, kawaii style) -->
+        <svg id="cat-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-lg">
+
+          <!-- Soft shadow under cat -->
+          <ellipse cx="100" cy="210" rx="55" ry="8" fill="rgba(255,150,180,0.2)" />
+
+          <!-- Body -->
+          <ellipse cx="100" cy="165" rx="52" ry="44" fill="#fff0f5" />
+          <ellipse cx="100" cy="165" rx="52" ry="44" fill="url(#bodyGrad)" />
+
+          <!-- Belly -->
+          <ellipse cx="100" cy="175" rx="28" ry="25" fill="white" opacity="0.7" />
+
+          <!-- Tail -->
+          <path id="cat-tail" class="cat-tail" d="M148 190 Q175 160 165 135 Q158 115 148 125 Q160 140 155 160 Q148 178 140 188 Z" fill="#ffd6e7" />
+
+          <!-- Head -->
+          <circle cx="100" cy="100" r="52" fill="#fff0f5" />
+          <circle cx="100" cy="100" r="52" fill="url(#headGrad)" />
+
+          <!-- Ears -->
+          <polygon points="58,60 48,20 85,52" fill="#ffd6e7" />
+          <polygon points="60,58 52,26 82,52" fill="#ffb3cc" opacity="0.6"/>
+          <polygon points="142,60 152,20 115,52" fill="#ffd6e7" />
+          <polygon points="140,58 148,26 118,52" fill="#ffb3cc" opacity="0.6"/>
+
+          <!-- Eyes -->
+          <g id="eye-left" class="cat-eye">
+            <circle cx="79" cy="98" r="10" fill="white"/>
+            <circle cx="79" cy="98" r="7" fill="#5a3e7a"/>
+            <circle cx="79" cy="98" r="4" fill="#2d1b3d"/>
+            <!-- Shine -->
+            <circle cx="82" cy="95" r="2.5" fill="white"/>
+            <circle cx="76" cy="102" r="1.2" fill="white" opacity="0.6"/>
+          </g>
+
+          <g id="eye-right" class="cat-eye">
+            <circle cx="121" cy="98" r="10" fill="white"/>
+            <circle cx="121" cy="98" r="7" fill="#5a3e7a"/>
+            <circle cx="121" cy="98" r="4" fill="#2d1b3d"/>
+            <!-- Shine -->
+            <circle cx="124" cy="95" r="2.5" fill="white"/>
+            <circle cx="118" cy="102" r="1.2" fill="white" opacity="0.6"/>
+          </g>
+
+          <!-- Sleeping/happy eyes (hidden by default) -->
+          <g id="eyes-happy" style="display:none">
+            <!-- Happy ^ ^ eyes -->
+            <path d="M69 98 Q79 88 89 98" stroke="#5a3e7a" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M111 98 Q121 88 131 98" stroke="#5a3e7a" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+
+          <g id="eyes-star" style="display:none">
+            <!-- Star eyes -->
+            <text x="69" y="104" font-size="18" text-anchor="middle" fill="#f0a">★</text>
+            <text x="131" y="104" font-size="18" text-anchor="middle" fill="#f0a">★</text>
+          </g>
+
+          <!-- Nose -->
+          <ellipse cx="100" cy="113" rx="4" ry="3" fill="#ffb3cc" />
+
+          <!-- Mouth -->
+          <path id="cat-mouth" d="M94 118 Q100 124 106 118" stroke="#d4709a" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+          <!-- Whiskers left -->
+          <g stroke="#c9a0bb" stroke-width="1.5" opacity="0.8" stroke-linecap="round">
+            <line x1="55" y1="110" x2="88" y2="113"/>
+            <line x1="52" y1="117" x2="88" y2="116"/>
+            <line x1="57" y1="124" x2="89" y2="120"/>
+          </g>
+          <!-- Whiskers right -->
+          <g stroke="#c9a0bb" stroke-width="1.5" opacity="0.8" stroke-linecap="round">
+            <line x1="145" y1="110" x2="112" y2="113"/>
+            <line x1="148" y1="117" x2="112" y2="116"/>
+            <line x1="143" y1="124" x2="111" y2="120"/>
+          </g>
+
+          <!-- Blush cheeks (hidden by default) -->
+          <ellipse id="blush-left" cx="70" cy="118" rx="12" ry="7" fill="#ffb3c6" opacity="0" class="cat-blush"/>
+          <ellipse id="blush-right" cx="130" cy="118" rx="12" ry="7" fill="#ffb3c6" opacity="0" class="cat-blush"/>
+
+          <!-- Tiny front paws -->
+          <ellipse cx="78" cy="208" rx="14" ry="8" fill="#ffd6e7"/>
+          <ellipse cx="122" cy="208" rx="14" ry="8" fill="#ffd6e7"/>
+          <!-- Paw toe dots -->
+          <circle cx="72" cy="207" r="2.5" fill="#ffb3cc"/>
+          <circle cx="78" cy="212" r="2.5" fill="#ffb3cc"/>
+          <circle cx="84" cy="207" r="2.5" fill="#ffb3cc"/>
+          <circle cx="116" cy="207" r="2.5" fill="#ffb3cc"/>
+          <circle cx="122" cy="212" r="2.5" fill="#ffb3cc"/>
+          <circle cx="128" cy="207" r="2.5" fill="#ffb3cc"/>
+
+          <!-- Defs -->
+          <defs>
+            <radialGradient id="bodyGrad" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="#fff8fb"/>
+              <stop offset="100%" stop-color="#ffd6e7"/>
+            </radialGradient>
+            <radialGradient id="headGrad" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="#fff8fb"/>
+              <stop offset="100%" stop-color="#ffd6e7" stop-opacity="0.6"/>
+            </radialGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- Popup reaction zone (absolute, centered over cat) -->
+      <div id="popup-zone" class="absolute inset-0 pointer-events-none overflow-visible"></div>
+
+    </div>
+
+    <!-- Current mood label -->
+    <div class="glass rounded-full px-6 py-2 text-sm font-semibold text-purple-500 shadow-md text-center min-w-[180px]" id="mood-label">
+      😴 Waiting for pets...
+    </div>
+
+    <!-- Milestone message -->
+    <div id="milestone-msg" class="text-center text-pink-500 font-bold text-sm h-5 transition-all duration-300"></div>
+
+    <!-- Hint text -->
+    <p class="text-xs text-pink-300 font-medium">tap the kitty to pet! ✨</p>
+
+  </div>
+
+  <!-- Milestone toast (floats above) -->
+  <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 glass rounded-full px-6 py-3 text-pink-600 font-bold shadow-xl text-base z-50 opacity-0 transition-all duration-500 pointer-events-none">
+    🎉 Milestone!
+  </div>
+
+
+  <script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    let petCount   = 0;
+    let happiness  = 0;
+    let combo      = 0;
+    let comboTimer = null;
+    let isAnimating = false;
+
+    // ─── Reactions pool ──────────────────────────────────────────────────────
+    const reactions = [
+      { emoji: '💖', mood: '🥰 So happy!',        eyes: 'happy',  blush: true  },
+      { emoji: '✨', mood: '😻 Purring loudly...',  eyes: 'normal', blush: false },
+      { emoji: '😸', mood: '😸 Hehe, more!',        eyes: 'happy',  blush: true  },
+      { emoji: '💫', mood: '💫 Floating on clouds', eyes: 'star',   blush: false },
+      { emoji: '🌸', mood: '🌸 Feeling the love',   eyes: 'normal', blush: true  },
+      { emoji: '😺', mood: '😺 Meow meow~',         eyes: 'normal', blush: false },
+      { emoji: '💕', mood: '💕 Mrrrow~',            eyes: 'happy',  blush: true  },
+      { emoji: '⭐', mood: '⭐ Purr purr purr',     eyes: 'star',   blush: false },
+      { emoji: '🍡', mood: '🍡 Soft like mochi!',   eyes: 'happy',  blush: true  },
+      { emoji: '🎀', mood: '🎀 Pretty kitty!',      eyes: 'normal', blush: true  },
+      { emoji: '🌈', mood: '🌈 Rainbows!',          eyes: 'star',   blush: false },
+      { emoji: '🫧', mood: '🫧 Bubble dreams~',     eyes: 'happy',  blush: true  },
+    ];
+
+    // Milestones
+    const milestones = [
+      { at: 5,   msg: '🐾 First 5 pets! You\'re kind!' },
+      { at: 10,  msg: '💕 10 pets! The cat loves you!' },
+      { at: 25,  msg: '⭐ 25 pets! You\'re a petting pro!' },
+      { at: 50,  msg: '🎉 50 pets! The cat is ecstatic!' },
+      { at: 100, msg: '🏆 100 PETS! LEGENDARY PETTER!' },
+      { at: 200, msg: '🌟 200! The cat ascended!' },
+      { at: 500, msg: '✨ 500! Are you even human?!' },
+    ];
+    const shownMilestones = new Set();
+
+    // ─── DOM refs ────────────────────────────────────────────────────────────
+    const catHit     = document.getElementById('cat-hit-area');
+    const catSvg     = document.getElementById('cat-svg');
+    const catContainer = document.getElementById('cat-container');
+    const popupZone  = document.getElementById('popup-zone');
+    const petCountEl = document.getElementById('pet-count');
+    const happinessEl= document.getElementById('happiness');
+    const comboEl    = document.getElementById('combo-count');
+    const comboBadge = document.getElementById('combo-badge');
+    const moodLabel  = document.getElementById('mood-label');
+    const milestoneMsg = document.getElementById('milestone-msg');
+    const toast      = document.getElementById('toast');
+    const counterBadge = document.getElementById('counter-badge');
+
+    const eyesNormal = document.querySelectorAll('#eye-left, #eye-right');
+    const eyesHappy  = document.getElementById('eyes-happy');
+    const eyesStar   = document.getElementById('eyes-star');
+    const blushLeft  = document.getElementById('blush-left');
+    const blushRight = document.getElementById('blush-right');
+    const catTail    = document.getElementById('cat-tail');
+
+    // ─── Eye state manager ───────────────────────────────────────────────────
+    function setEyes(type) {
+      eyesNormal.forEach(e => e.style.display = (type === 'normal') ? '' : 'none');
+      eyesHappy.style.display  = (type === 'happy') ? '' : 'none';
+      eyesStar.style.display   = (type === 'star')  ? '' : 'none';
+    }
+
+    // ─── Blush animation ─────────────────────────────────────────────────────
+    function showBlush() {
+      [blushLeft, blushRight].forEach(b => {
+        b.style.animation = 'none';
+        void b.offsetWidth; // reflow
+        b.style.animation = 'blush 1.2s ease-in-out forwards';
+        b.style.opacity = '';
+      });
+    }
+
+    // ─── Tail wag ─────────────────────────────────────────────────────────────
+    let tailWagTimer = null;
+    function wagTail() {
+      catTail.style.animation = 'tailWag 0.25s ease-in-out infinite';
+      clearTimeout(tailWagTimer);
+      tailWagTimer = setTimeout(() => {
+        catTail.style.animation = '';
+      }, 800);
+    }
+
+    // ─── Popup emoji ─────────────────────────────────────────────────────────
+    function spawnEmoji(emoji, x, y) {
+      const el = document.createElement('div');
+      el.className = 'reaction-popup';
+      el.textContent = emoji;
+      // position relative to popup-zone (same size as cat-stage)
+      el.style.left = (x - 20) + 'px';
+      el.style.top  = (y - 20) + 'px';
+      popupZone.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+
+    function spawnStars(cx, cy) {
+      const stars = ['✨','💫','⭐','🌟','✦'];
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.className = 'star-particle';
+          el.textContent = stars[i % stars.length];
+          const angle = (i / 5) * Math.PI * 2;
+          const dist  = 40 + Math.random() * 30;
+          el.style.left = (cx + Math.cos(angle) * dist - 12) + 'px';
+          el.style.top  = (cy + Math.sin(angle) * dist - 12) + 'px';
+          popupZone.appendChild(el);
+          el.addEventListener('animationend', () => el.remove());
+        }, i * 60);
+      }
+    }
+
+    // ─── Counter update ──────────────────────────────────────────────────────
+    function updateCounters() {
+      petCountEl.textContent = petCount;
+      happiness = Math.min(100, Math.floor(petCount / 2));
+      happinessEl.textContent = happiness + '%';
+
+      // Bump animation on counter
+      counterBadge.style.animation = 'none';
+      void counterBadge.offsetWidth;
+      counterBadge.style.animation = 'counterBump 0.3s ease-in-out';
+    }
+
+    // ─── Combo logic ─────────────────────────────────────────────────────────
+    function updateCombo() {
+      combo++;
+      comboEl.textContent = 'x' + combo;
+
+      comboBadge.style.opacity = '1';
+      comboBadge.style.transform = 'scale(1)';
+
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(() => {
+        combo = 0;
+        comboBadge.style.opacity = '0';
+        comboBadge.style.transform = 'scale(0.8)';
+      }, 1500);
+    }
+
+    // ─── Milestone check ─────────────────────────────────────────────────────
+    function checkMilestones() {
+      for (const m of milestones) {
+        if (petCount === m.at && !shownMilestones.has(m.at)) {
+          shownMilestones.add(m.at);
+          showToast(m.msg);
+
+          // Ring pulse on counter
+          counterBadge.classList.remove('ring-pulse');
+          void counterBadge.offsetWidth;
+          counterBadge.classList.add('ring-pulse');
+          counterBadge.addEventListener('animationend', () => {
+            counterBadge.classList.remove('ring-pulse');
+          }, { once: true });
+        }
+      }
+    }
+
+    // ─── Toast ───────────────────────────────────────────────────────────────
+    let toastTimer = null;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+      }, 2500);
+    }
+
+    // ─── Main pet handler ────────────────────────────────────────────────────
+    function onPet(event) {
+      petCount++;
+      updateCounters();
+      updateCombo();
+      checkMilestones();
+
+      // Pick a random reaction
+      const r = reactions[Math.floor(Math.random() * reactions.length)];
+
+      // Update mood
+      moodLabel.textContent = r.mood;
+
+      // Eyes
+      setEyes(r.eyes);
+      setTimeout(() => setEyes('normal'), 700);
+
+      // Blush
+      if (r.blush) showBlush();
+
+      // Tail wag
+      wagTail();
+
+      // Squish animation on cat
+      catContainer.style.animation = 'squish 0.4s ease-in-out, float 3s ease-in-out infinite 0.4s';
+
+      // Get click position relative to popup-zone
+      const stage = document.getElementById('cat-stage');
+      const rect  = stage.getBoundingClientRect();
+      let cx, cy;
+      if (event.touches) {
+        cx = event.touches[0].clientX - rect.left;
+        cy = event.touches[0].clientY - rect.top;
+      } else {
+        cx = event.clientX - rect.left;
+        cy = event.clientY - rect.top;
+      }
+
+      // Spawn popup emoji at click position
+      spawnEmoji(r.emoji, cx, cy);
+
+      // Combo burst stars
+      if (combo >= 3) {
+        spawnStars(cx, cy);
+      }
+    }
+
+    // ─── Event listeners ─────────────────────────────────────────────────────
+    catHit.addEventListener('click', onPet);
+    catHit.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      onPet(e);
+    }, { passive: false });
+
+    // Hover: subtle tail wag
+    catHit.addEventListener('mouseenter', () => {
+      catTail.style.animation = 'tailWag 0.4s ease-in-out infinite';
+    });
+    catHit.addEventListener('mouseleave', () => {
+      if (!tailWagTimer) catTail.style.animation = '';
+    });
+
+  </script>
+</body>
+</html>
